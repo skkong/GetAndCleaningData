@@ -1,10 +1,13 @@
 #
-# features: column names
-# y_test.txt: row names = activity name
+# features.txt: column names
+# y_test.txt: activity name
 # read X data and y data, and then merge them
 #
 
+# include as following to make tidy data sets
 library(dplyr)
+library(tidyr)
+
 ############################################################################
 ## Step 1: Merges the training and the test sets to create one data set.
 ##
@@ -17,7 +20,7 @@ y_test <- read.table("test/y_test.txt", header=FALSE)       # no: 2947, read tes
 subject_train <- read.table("train/subject_train.txt")      # no: 7352, read An identifier of the subject who carried out the train
 subject_test <- read.table("test/subject_test.txt")         # no: 2947, read An identifier of the subject who carried out the test
 
-x_train$subject <- subject_train$V1
+x_train$subject <- subject_train$V1 
 x_test$subject <- subject_test$V1
 
 x_train$activity <- y_train$V1
@@ -47,19 +50,33 @@ all_ds.mean_std$activity <- activity.labels[all_ds.mean_std$activity, ]$V2
 ############################################################################
 ## Step 4: Appropriately labels the data set with descriptive variable names. 
 ##
-colnames(all_ds.mean_std) <- features[features.order,]$V2    # assign descriptive column name to data set
+# In my opinion, all lower cases of variables are not readable. 
+# So, I have replaced special characters like as -, (, ) with dot(.)
+# and fBodyBody... with fBody... to make more descriptive variable names.
+# Additionally, t means Time and f means Fft(Fast Fourier Transformation)
 
-count_columns <- length(colnames(all_ds.mean_std))
-names(all_ds.mean_std)[count_columns - 1] <- c("subject")       # assign activity tag to column
-names(all_ds.mean_std)[count_columns] <- c("activity")      # assign activity tag to column
+more_descriptive <- features[features.order,]$V2
+
+more_descriptive <- gsub("-", ".", more_descriptive)
+more_descriptive <- gsub(",", ".", more_descriptive)
+more_descriptive <- gsub("\\(\\)", "", more_descriptive)
+more_descriptive <- gsub("\\(", ".", more_descriptive)
+more_descriptive <- gsub("\\)", "", more_descriptive)
+more_descriptive <- gsub("^fBodyBody", "fBody", more_descriptive)   # correct fBodyBody... as fBody
+more_descriptive <- gsub("^t", "Time", more_descriptive)            # t means Time
+more_descriptive <- gsub("^f", "Fft", more_descriptive)             # f means Fft
+
+colnames(all_ds.mean_std) <- c(more_descriptive, "subject", "activity")   # assign descriptive column name to data set
+
 ############################################################################
 ## Step 5: From the data set in step 4, creates a second, independent tidy data set 
 ##      with the average of each variable for each activity and each subject.
 ##
-# using dplyr package and chaining call
-all_ds_2nd <- all_ds.mean_std 
-    %>% group_by(subject, activity) 
-    %>% summarise_each(funs(mean))
+# using dplyr, tidyr package and chaining call to make tidy data set
+all_ds_2nd <- all_ds.mean_std %>% 
+  group_by(subject, activity) %>% 
+  summarise_each(funs(mean)) %>% 
+  gather(vFeature, vMean, -c(subject, activity))
 
 write.table(all_ds_2nd, file="output.txt", row.names = FALSE)       # save output as file
 
