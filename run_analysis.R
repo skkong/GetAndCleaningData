@@ -79,4 +79,4 @@ all_ds_2nd <- all_ds.mean_std %>%
   gather(vFeature, vMean, -c(subject, activity))
 
 write.table(all_ds_2nd, file="output.txt", row.names = FALSE)       # save output as file
-
+# read file: output <- read.table('output.txt', header=TRUE)
