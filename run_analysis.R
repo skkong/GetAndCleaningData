@@ -2,7 +2,7 @@
 # features.txt: column names
 # y_test.txt: activity name
 # read X data and y data, and then merge them
-#
+# ex) source('run_analysis.R')
 
 # include as following to make tidy data sets
 library(dplyr)
